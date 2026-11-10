@@ -204,4 +204,4 @@ With multiple developers:
 
 ## Phase 7: Convergence
 
-- [ ] T032 CRITICAL: Implement drag & drop reordering of the Convocati in hand via `@dnd-kit` (`SortableContext` in `src/components/game/Tavolo.tsx` + `riordinaMano` store action in `src/store/useGameStore.ts`) per Constitution II (missing)
+- [x] T032 CRITICAL: Implement drag & drop reordering of the Convocati in hand via `@dnd-kit` (`SortableContext` in `src/components/game/Tavolo.tsx` + `riordinaMano` store action in `src/store/useGameStore.ts`) per Constitution II (missing)

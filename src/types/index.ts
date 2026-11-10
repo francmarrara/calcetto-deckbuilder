@@ -165,3 +165,60 @@ export interface UltimaGiocata {
   xg: number;
   passaggi: string[];
 }
+
+// ---------------------------------------------------------------------------
+// Guida
+// ---------------------------------------------------------------------------
+
+/** Singola sezione argomento della Guida (Regole). */
+export interface GuidaContenuto {
+  /** Identificatore univoco della sezione (es. `regole-base`). */
+  id: string;
+  /** Titolo mostrato nella scheda. */
+  titolo: string;
+  /** Contenuto testuale della sezione. */
+  contenuto: string;
+  /** Ordine di visualizzazione nelle schede: intero >= 0, univoco. */
+  ordine: number;
+}
+
+// ---------------------------------------------------------------------------
+// Tutorial
+// ---------------------------------------------------------------------------
+
+/** Fase scriptata della partita tutorial. */
+export type TutorialFase = 1 | 2 | 3 | 4;
+
+/** Stato della partita tutorial guidata. */
+export interface TutorialStato {
+  /** Indice della fase corrente: 1 La Mano, 2 Il Piazzamento, 3 Risoluzione e xG, 4 Fine Turno. */
+  faseAttiva: TutorialFase;
+  /** True quando tutte e quattro le fasi sono state completate. */
+  completato: boolean;
+  /** True quando le interazioni non necessarie devono essere bloccate. */
+  interazioniBloccate: boolean;
+  /** Identificatore dell'elemento UI da evidenziare nella fase corrente. */
+  elementoTarget?: string;
+  /** ID dei Convocati nel mazzo pre-ordinato (almeno 5). */
+  mazzoOrdinato: string[];
+  /** Parametri minimi dell'Avversario (il Buio) usato nel tutorial. */
+  avversarioParametri: Avversario;
+}
+
+// ---------------------------------------------------------------------------
+// Preferenze audio e primo avvio
+// ---------------------------------------------------------------------------
+
+/** Preferenze audio persistenti, con toggle indipendenti. */
+export interface PreferenzeAudio {
+  /** Musica di sottofondo attiva/disattiva (default true). */
+  musicaAttiva: boolean;
+  /** Effetti sonori attivi/disattivi (default true). */
+  sfxAttivi: boolean;
+}
+
+/** Indicatore del primissimo avvio assoluto del gioco. */
+export interface FlagPrimoAvvio {
+  /** True se il gioco non è mai stato avviato prima (default true). */
+  primoAvvio: boolean;
+}

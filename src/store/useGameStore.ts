@@ -23,7 +23,9 @@ import { mescola } from '../utils/random';
 const DIMENSIONE_MANO = 8;
 const MANI_INIZIALI = 4;
 const SCARTI_INIZIALI = 3;
-const MAX_CARTE_GIOCABILI = 5;
+
+/** Massimo numero di Convocati giocabili in una singola Azione. */
+export const MAX_CARTE_GIOCABILI = 5;
 const MAX_FENOMENI = 5;
 const COSTO_FENOMENO = 6;
 
@@ -126,6 +128,11 @@ export interface EconomyState {
 
 export interface GameActions {
   avviaRun: () => void;
+  avviaPartitaTutorial: (
+    mazzoOrdinato: readonly string[],
+    avversario: Avversario,
+  ) => void;
+  entraInPiazzamento: () => void;
   selezionaAvversario: (id: string) => void;
   pescaCarte: () => void;
   selezionaCarta: (id: string) => void;
@@ -134,6 +141,7 @@ export interface GameActions {
   giocaSelezionate: () => void;
   valutaRisultato: () => void;
   riordinaFenomeni: (activeId: string, overId: string) => void;
+  riordinaMano: (activeId: string, overId: string) => void;
   acquistaFenomeno: (fenomenoId: string) => void;
   acquistaPacchetto: (pacchettoId: string) => void;
   prossimoAvversario: () => void;
@@ -171,6 +179,41 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
   avviaRun: () => {
     set({ stato: 'SELECT_OPPONENT', messaggio: null });
+  },
+
+  avviaPartitaTutorial: (mazzoOrdinato: readonly string[], avversario: Avversario) => {
+    const mazzoBase = creaMazzoBase();
+    const catalogo = new Map(mazzoBase.map((convocato) => [convocato.id, convocato]));
+
+    const carteOrdinate = mazzoOrdinato
+      .map((id) => catalogo.get(id))
+      .filter((convocato): convocato is Convocato => convocato !== undefined);
+    const idOrdinati = new Set(carteOrdinate.map((convocato) => convocato.id));
+    const restoDelMazzo = mescolaMazzo(
+      mazzoBase.filter((convocato) => !idOrdinati.has(convocato.id)),
+    );
+    const mazzoCompleto = [...carteOrdinate, ...restoDelMazzo];
+
+    const { mano, mazzo } = pescaFinoA([], mazzoCompleto, DIMENSIONE_MANO);
+
+    // Costituzione V: il tutorial percorre la macchina a stati reale
+    // INIT_MATCH (mazzo pre-ordinato) → SELECT_OPPONENT (Avversario con
+    // parametri minimi) → DRAW_PHASE (mano iniziale della fase 1).
+    set({ ...statoPartitaIniziale(), stato: 'INIT_MATCH' });
+    set({ stato: 'SELECT_OPPONENT', avversario, messaggio: null });
+    set({
+      stato: 'DRAW_PHASE',
+      mazzo: mazzoCompleto,
+      mazzoRimanente: mazzo,
+      manoAttuale: mano,
+    });
+  },
+
+  /** Transizione DRAW_PHASE → PLAYER_ACTION (fase tutorial 1 → 2). */
+  entraInPiazzamento: () => {
+    const stato = get();
+    if (stato.stato !== 'DRAW_PHASE') return;
+    set({ stato: 'PLAYER_ACTION', messaggio: null });
   },
 
   selezionaAvversario: (id: string) => {
@@ -368,6 +411,21 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
     salvaFenomeni(fenomeni);
     set({ fenomeniAttivi: fenomeni, messaggio: null });
+  },
+
+  riordinaMano: (activeId: string, overId: string) => {
+    const stato = get();
+    if (stato.stato !== 'PLAYER_ACTION') return;
+
+    const da = stato.manoAttuale.findIndex((carta) => carta.id === activeId);
+    const a = stato.manoAttuale.findIndex((carta) => carta.id === overId);
+    if (da < 0 || a < 0 || da === a) return;
+
+    const mano = [...stato.manoAttuale];
+    const [spostata] = mano.splice(da, 1);
+    mano.splice(a, 0, spostata);
+
+    set({ manoAttuale: mano });
   },
 
   acquistaFenomeno: (fenomenoId: string) => {

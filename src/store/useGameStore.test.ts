@@ -140,6 +140,32 @@ describe('useGameStore — game loop', () => {
     expect(dopo.esito).toBe('SCONFITTA');
   });
 
+  it('riordina le carte in mano senza perdere la selezione', () => {
+    avviaPartita();
+    const stato = useGameStore.getState();
+    const [prima, seconda, terza] = stato.manoAttuale;
+
+    stato.selezionaCarta(terza.id);
+    stato.riordinaMano(prima.id, terza.id);
+
+    const dopo = useGameStore.getState();
+    expect(dopo.manoAttuale.slice(0, 3).map((carta) => carta.id)).toEqual([
+      seconda.id,
+      terza.id,
+      prima.id,
+    ]);
+    expect(dopo.selezionate).toEqual([terza.id]);
+  });
+
+  it('ignora un riordino della mano con id sconosciuti', () => {
+    avviaPartita();
+    const prima = useGameStore.getState().manoAttuale.map((carta) => carta.id);
+
+    useGameStore.getState().riordinaMano('inesistente', prima[0]);
+
+    expect(useGameStore.getState().manoAttuale.map((carta) => carta.id)).toEqual(prima);
+  });
+
   it('acquista un Fenomeno spendendo Quote e rispettando gli slot', () => {
     avviaPartita();
     const avversario = useGameStore.getState().avversario;

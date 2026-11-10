@@ -1,8 +1,9 @@
 {
-  "ai": "opencode",
+  "ai": "droid",
+  "ai_skills": true,
   "feature_numbering": "sequential",
-  "here": false,
-  "integration": "opencode",
+  "here": true,
+  "integration": "droid",
   "script": "sh",
   "speckit_version": "1.0.13"
 }

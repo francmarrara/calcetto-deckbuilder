@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CATALOGO_FENOMENI } from '../data/fenomeni';
-import { caricaFenomeni, caricaQuote, salvaFenomeni, salvaQuote } from './storage';
+import {
+  caricaFenomeni,
+  caricaFlagPrimoAvvio,
+  caricaPreferenzeAudio,
+  caricaQuote,
+  caricaTutorialCompletato,
+  salvaFenomeni,
+  salvaFlagPrimoAvvio,
+  salvaPreferenzeAudio,
+  salvaQuote,
+  salvaTutorialCompletato,
+} from './storage';
 
 const memoria = new Map<string, string>();
 
@@ -56,5 +67,61 @@ describe('persistenza LocalStorage', () => {
 
     memoria.set('quota-campo:quote-v1', 'abc');
     expect(caricaQuote()).toBe(0);
+  });
+
+  it('salva e ricarica le preferenze audio con toggle indipendenti', () => {
+    expect(caricaPreferenzeAudio()).toEqual({ musicaAttiva: true, sfxAttivi: true });
+
+    salvaPreferenzeAudio({ musicaAttiva: false, sfxAttivi: true });
+    expect(caricaPreferenzeAudio()).toEqual({ musicaAttiva: false, sfxAttivi: true });
+
+    salvaPreferenzeAudio({ musicaAttiva: false, sfxAttivi: false });
+    expect(caricaPreferenzeAudio()).toEqual({ musicaAttiva: false, sfxAttivi: false });
+  });
+
+  it('usa i default audio se il salvataggio è corrotto', () => {
+    memoria.set('quota-campo:audio-preferenze-v1', '{non-json');
+    expect(caricaPreferenzeAudio()).toEqual({ musicaAttiva: true, sfxAttivi: true });
+  });
+
+  it('persiste il flag di primo avvio, default true', () => {
+    expect(caricaFlagPrimoAvvio()).toBe(true);
+
+    salvaFlagPrimoAvvio(false);
+    expect(caricaFlagPrimoAvvio()).toBe(false);
+
+    salvaFlagPrimoAvvio(true);
+    expect(caricaFlagPrimoAvvio()).toBe(true);
+  });
+
+  it('persiste il completamento del Tutorial, default false', () => {
+    expect(caricaTutorialCompletato()).toBe(false);
+
+    salvaTutorialCompletato(true);
+    expect(caricaTutorialCompletato()).toBe(true);
+  });
+
+  it('legge gli alias legacy documentati e li migra sulla chiave canonica', () => {
+    memoria.set('game.firstRun', 'false');
+    expect(caricaFlagPrimoAvvio()).toBe(false);
+    expect(memoria.get('quota-campo:game-firstrun-v1')).toBe('false');
+
+    memoria.clear();
+    memoria.set('audio.preferences', JSON.stringify({ musicaAttiva: false, sfxAttivi: true }));
+    expect(caricaPreferenzeAudio()).toEqual({ musicaAttiva: false, sfxAttivi: true });
+    expect(memoria.get('quota-campo:audio-preferenze-v1')).toBe(
+      JSON.stringify({ musicaAttiva: false, sfxAttivi: true }),
+    );
+
+    memoria.clear();
+    memoria.set('tutorial.completed', 'true');
+    expect(caricaTutorialCompletato()).toBe(true);
+    expect(memoria.get('quota-campo:tutorial-completato-v1')).toBe('true');
+  });
+
+  it('la chiave canonica ha precedenza sull\'alias legacy', () => {
+    memoria.set('game.firstRun', 'false');
+    memoria.set('quota-campo:game-firstrun-v1', 'true');
+    expect(caricaFlagPrimoAvvio()).toBe(true);
   });
 });

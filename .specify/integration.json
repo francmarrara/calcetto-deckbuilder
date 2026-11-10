@@ -2,14 +2,14 @@
   "version": "1.0.13",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "opencode"
+    "droid"
   ],
   "integration_settings": {
-    "opencode": {
+    "droid": {
       "script": "sh",
-      "invoke_separator": "."
+      "invoke_separator": "-"
     }
   },
-  "integration": "opencode",
-  "default_integration": "opencode"
+  "integration": "droid",
+  "default_integration": "droid"
 }
